@@ -1,32 +1,26 @@
+from shodan import Shodan, APIError
+
 import Service as S
 import Target as T
-import Vulnerability
-import shodan
 
 
-class ShodanServer:
+class ShodanClient:
 
+    def __init__(self, api: str) -> None:
+        self.client = Shodan(api)
 
-    def __init__(self):
-        self.api = ''
-
-    def __init__(self, api):
-        self.api = shodan.Shodan(api)
-
-
-
-    def get_host(self, ip_address):
+    def get_host(self, ip_address: str):
         try:
             print("Obtaining info from a host...")
 
             # Lookup the host (example: 192.167.9.3)
-            results = self.api.host(ip_address)
+            results = self.client.host(ip_address)
             print("Host found on Shodan Database...")
 
             target = T.Target(results["ip_str"], results["asn"],
-                            results["country_code"], results["country_name"],
-                            results["city"], results["org"],
-                            results["last_update"], len(results["ports"]))
+                              results["country_code"], results["country_name"],
+                              results["city"], results["org"],
+                              results["last_update"], len(results["ports"]))
 
             # Inserting just the code of vulnerabilities to print it
             # in low level verbosity.
@@ -36,7 +30,7 @@ class ShodanServer:
 
             # Checking open ports and initializating services.
             if "data" in results:
-                #print(len(results['data']))
+                # print(len(results['data']))
                 for i in range(0, len(results['data'])):
                     # Inizialization service objects
                     tmp_serv = S.Service(results['data'][i])
@@ -46,34 +40,23 @@ class ShodanServer:
             target.open_ports = sorted(target.open_ports, key=lambda service: service.port)
             # Return object
             return target
-        except shodan.APIError as e:
+        except APIError as e:
             print('error: %s' % e)
 
     def search(self, query_str, num_result):
         target_list = []
         try:
-            results = self.api.search(query_str, 1, num_result)
+            results = self.client.search(query_str, 1, num_result)
             for result in results['matches']:
                 target_list.append(self.get_host(result["ip_str"]))
-
-
 
             # Returns the list of targets because ShodanServer acts like a Factory with its Factory Method Pattern.
             return target_list
 
-
-        except shodan.exception.APIError:
+        except APIError:
             print("Please upgrade your API plan to use filters or paging")
             exit()
 
-
-
-    # Restituisce un report completo sugli host che rispettano il target_filter (e.g. cerca solo macchine che sono a
-    # Napoli con target_filter='City:Napoli') e soffrono di almeno una delle vulnerabilita' indicate in vulns ( una
-    # vulnerabilita' e' specificata col codice del tipo CVE-2014-0117). Sono infine restituiti solo un numero limitato
-    # di host.
-    #
-    # Esempio di query: python3 ShodanGuru.py vuln CVE-2014-0117 city:Naples 10
     def search_by_vuln(self, vulns, target_filter, num_result):
         target_list = self.search(target_filter, num_result)
         positive_list = []
@@ -85,10 +68,8 @@ class ShodanServer:
                 if vuln in target.vulns:
                     positive_list.append(target)
 
-
         # Returns the list of targets because ShodanServer acts like a Factory with its Factory Method Pattern.
         return positive_list
-
 
     @staticmethod
     def show_filter():
@@ -102,11 +83,11 @@ class ShodanServer:
         print("Choice:")
         c = input()
         switcher = {
-            '1': ShodanServer.general_filter,
-            '2': ShodanServer.HTTP_filter,
-            '3': ShodanServer.NTP_filter,
-            '4': ShodanServer.SSL_filter,
-            '5': ShodanServer.Telnet_filter,
+            '1': ShodanClient.general_filter,
+            '2': ShodanClient.http_filter,
+            '3': ShodanClient.ntp_filter,
+            '4': ShodanClient.ssl_filter,
+            '5': ShodanClient.telnet_filter,
             '6': exit,
         }
         # Get the function from switcher dictionary
@@ -150,11 +131,11 @@ class ShodanServer:
         while True:
             print("press b to go back")
             c = input()
-            if (c == "b"):
-                ShodanServer.show_filter()
+            if c == "b":
+                ShodanClient.show_filter()
 
     @staticmethod
-    def HTTP_filter():
+    def http_filter():
         print("### HTTP FILTER ###")
         print("# - Name - Description - Type")
         print("##########################################################################")
@@ -168,11 +149,11 @@ class ShodanServer:
         while True:
             print("press b to go back")
             c = input()
-            if (c == "b"):
-                ShodanServer.show_filter()
+            if c == "b":
+                ShodanClient.show_filter()
 
     @staticmethod
-    def NTP_filter():
+    def ntp_filter():
         print("### NTP FILTER ###")
         print("# - Name - Description - Type")
         print("##########################################################################")
@@ -184,11 +165,11 @@ class ShodanServer:
         while True:
             print("press b to go back")
             c = input()
-            if (c == "b"):
-                ShodanServer.show_filter()
+            if c == "b":
+                ShodanClient.show_filter()
 
     @staticmethod
-    def SSL_filter():
+    def ssl_filter():
         print("### SSL FILTER ###")
         print("# - Name - Description - Type")
         print("##########################################################################")
@@ -210,11 +191,11 @@ class ShodanServer:
         while True:
             print("press b to go back")
             c = input()
-            if (c == "b"):
-                ShodanServer.show_filter()
+            if c == "b":
+                ShodanClient.show_filter()
 
     @staticmethod
-    def Telnet_filter():
+    def telnet_filter():
         print("### Telnet FILTER ###")
         print("# - Name - Description - Type")
         print("##########################################################################")
@@ -227,5 +208,5 @@ class ShodanServer:
         while True:
             print("press b to go back")
             c = input()
-            if (c == "b"):
-                ShodanServer.show_filter()
+            if c == "b":
+                ShodanClient.show_filter()

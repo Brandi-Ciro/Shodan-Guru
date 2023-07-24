@@ -1,12 +1,13 @@
 # Authors: Marco Urbano & Ciro Brandi
 
 import Vulnerability as V
+
+
 # La classe service rappresenta un singolo servizio (es. HTTP, HTTPS) e
 # contiene tutte le informazioni sia sulla porta di comunicazione che
 # sulle vulnerabilità.
 
 class Service:
-
 
     def __init__(self):
         self.module = ''
@@ -91,7 +92,7 @@ class Service:
         if "ssl" in json_object:
             if "versions" in json_object["ssl"]:
                 for ssl_vers in json_object["ssl"]["versions"]:
-                    #print(ssl_vers)
+                    # print(ssl_vers)
                     self.ssl_versions.append(ssl_vers)
 
         if "vulns" in json_object:
